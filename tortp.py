@@ -136,34 +136,31 @@ def check_tortp(myip, exit):
       sys.exit(1)
    return myip
 
-def get_exit(is_running):
-   """
-   Get list of exit node from stem
-   """
-   if is_running:
-      try:
-         with Controller.from_port(port = 6969) as controller:
+
+def get_exit(is_running='ignored'):
+    """
+    Get list of exit node from stem
+    """
+    try:
+        with Controller.from_port(port = 6969) as controller:
             controller.authenticate()
             exit = {'count': [], 'fingerprint': [], 'nickname': [], 'ipaddress': []}
             count = -1
             for circ in controller.get_circuits():
-               if circ.status != stem.CircStatus.BUILT:
-                  continue
-               exit_fp, exit_nickname = circ.path[-1]
-               exit_desc = controller.get_network_status(exit_fp, None)
-               exit_address = exit_desc.address if exit_desc else 'unknown'
-               count += 1
-               exit['count'].append(count)
-               exit['fingerprint'].append(exit_fp)
-               exit['nickname'].append(exit_nickname)
-               exit['ipaddress'].append(exit_address)
-         return exit
-      except stem.SocketError as exc:
-         notify("TorTP", "[!] Unable to connect to port 6969 (%s)" % exc)
-         sys.exit(1)
-   else:
-      notify("TorTP", "[!] Tor is not running")
-      sys.exit(0)
+                if circ.status != stem.CircStatus.BUILT:
+                    continue
+            exit_fp, exit_nickname = circ.path[-1]
+            exit_desc = controller.get_network_status(exit_fp, None)
+            exit_address = exit_desc.address if exit_desc else 'unknown'
+            count += 1
+            exit['count'].append(count)
+            exit['fingerprint'].append(exit_fp)
+            exit['nickname'].append(exit_nickname)
+            exit['ipaddress'].append(exit_address)
+            return exit
+    except stem.SocketError as exc:
+        notify("TorTP", "[!] Unable to connect to port 6969 (%s)" % exc)
+        raise exc
 
 
 def exit_info(exit):

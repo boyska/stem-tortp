@@ -1,13 +1,17 @@
 #!/usr/bin/env python
-import pygtk
-pygtk.require('2.0')
-import gtk
 import atexit
 import os
 import sys
+import logging
+
 import gobject
 import gettext
+import pygtk
+pygtk.require('2.0')
+import gtk
+
 import tortp
+
 try:
     import pynotify
     pynotify.init("TorTP")
@@ -220,24 +224,25 @@ class TransparentProxyInfoBox(gtk.VBox):
         self.pack_start(self.treeview, True)
 
     def load_model(self):
-       self.liststore.clear()
-       exit_node = tortp.get_exit()
-       try:
-           for i in exit_node['count']:
-               item = []
-               item.append(exit_node['fingerprint'][i])
-               item.append(exit_node['nickname'][i])
-               item.append(exit_node['ipaddress'][i])
-               self.liststore.append(item)
-       except SystemExit as e:
-           if e.code == 1:
-               notify("TorTP", _("Tor is not running"))
-           else:
-               notify("TorTP", _("An error occurred while getting Tor infos"))
-       except:
-           pass
-       gobject.timeout_add_seconds(5, self.load_model)
-
+        self.liststore.clear()
+        if tortp.is_running():
+            exit_node = tortp.get_exit()
+            try:
+                for i in exit_node['count']:
+                    item = []
+                    item.append(exit_node['fingerprint'][i])
+                    item.append(exit_node['nickname'][i])
+                    item.append(exit_node['ipaddress'][i])
+                    self.liststore.append(item)
+            except SystemExit as e:
+                if e.code == 1:
+                    notify("TorTP", _("Tor is not running"))
+                else:
+                    notify("TorTP", 
+                           _("An error occurred while getting Tor infos"))
+            except:
+                pass
+        gobject.timeout_add_seconds(5, self.load_model)
 
 
 class TransparentProxyBox(gtk.VBox):
